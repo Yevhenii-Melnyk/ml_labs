@@ -47,3 +47,13 @@ class Profiler(object):
 
     def __exit__(self, type, value, traceback):
         print "Elapsed time: {:.3f} sec".format(time.time() - self._startTime)
+
+
+def weighted_choice(items):
+    weight_total = sum(items)
+    n = random.uniform(0, weight_total)
+    for idx, weight in enumerate(items):
+        if n < weight:
+            break
+        n -= weight
+    return idx

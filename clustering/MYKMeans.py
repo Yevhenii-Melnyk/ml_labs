@@ -1,10 +1,12 @@
 import operator
 import random
 import numpy as np
-
+from numpy.random import choice
 import numpy
 from numpy import ndarray, mean
 from numpy.ma import array
+
+from clustering.util import weighted_choice
 
 
 def squared_dist(entry, centroid):
@@ -33,8 +35,7 @@ def cosine_dist(entry, centroid):
 
 
 class MYKMeans:
-    def __init__(self, n_clusters=8, n_init=10, max_iter=100, tol=1e-4, dist_func=euclid_dist,
-                 init='default'):
+    def __init__(self, n_clusters=8, n_init=10, max_iter=100, tol=1e-4, dist_func=euclid_dist, init='kmeans++'):
         self.n_clusters = n_clusters
         self.n_init = n_init
         self.max_iter = max_iter
@@ -50,18 +51,17 @@ class MYKMeans:
 
     def kmeans_plus_plus(self, data):
         centroids = []
-        first = random.sample(range(data.shape[0]), 1)
+        first = random.sample(range(data.shape[0]), 1)[0]
         centroids.append(first)
-        temporary_clusters = []
-        for index in range(1, self.n_clusters + 1):
-            sumV = 0
+        for index in range(1, self.n_clusters):
+            weights = ndarray((data.shape[0],), float)
+            total = 0
             for idx, entry in enumerate(data):
-                assigned_centroid = min([self.dist_func(entry, centroid) for centroid in centroids])
-                sumV += assigned_centroid ** 2
-                temporary_clusters[idx] = assigned_centroid
-            for idx, entry in enumerate(data):
-                sumV
-        return centroids
+                weights[idx] = min([self.dist_func(entry, centroid) for centroid in centroids]) ** 2
+            weights[centroids] = 0
+            new_random = weighted_choice(weights)
+            centroids.append(new_random)
+        return data[centroids]
 
     def seed_centroid(self, data):
         if self.init == 'kmeans++':
