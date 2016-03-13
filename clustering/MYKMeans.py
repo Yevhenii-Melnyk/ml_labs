@@ -1,43 +1,16 @@
 import operator
 import random
 import numpy as np
-from numpy.random import choice
-import numpy
 from numpy import ndarray, mean
 from numpy.ma import array
 
 from clustering.util import weighted_choice
-
-
-def squared_dist(entry, centroid):
-    diff = centroid - entry
-    dist = diff.dot(diff)
-    return dist
-
-
-def euclid_dist(entry, centroid):
-    diff = centroid - entry
-    dist = np.sqrt(diff.dot(diff))
-    return dist
-
-
-def manhattan_dist(entry, centroid):
-    diff = centroid - entry
-    dist = np.sum(np.absolute(diff))
-    return dist
-
-
-def cosine_dist(entry, centroid):
-    numerator = entry.dot(centroid)
-    denominator = np.sqrt(entry.dot(entry)) * (np.sqrt(centroid.dot(centroid)))
-    dist = numerator / denominator
-    return 1 - dist
+from clustering.weight_functions import euclid_dist
 
 
 class MYKMeans:
-    def __init__(self, n_clusters=8, n_init=10, max_iter=100, tol=1e-4, dist_func=euclid_dist, init='kmeans++'):
+    def __init__(self, n_clusters=8, max_iter=100, tol=1e-4, dist_func=euclid_dist, init='kmeans++'):
         self.n_clusters = n_clusters
-        self.n_init = n_init
         self.max_iter = max_iter
         self.tol = tol
         self.iterations = max_iter
@@ -55,9 +28,8 @@ class MYKMeans:
         centroids.append(first)
         for index in range(1, self.n_clusters):
             weights = ndarray((data.shape[0],), float)
-            total = 0
             for idx, entry in enumerate(data):
-                weights[idx] = min([self.dist_func(entry, centroid) for centroid in centroids]) ** 2
+                weights[idx] = min([self.dist_func(entry, data[centroid]) for centroid in centroids]) ** 2
             weights[centroids] = 0
             new_random = weighted_choice(weights)
             centroids.append(new_random)
@@ -106,7 +78,7 @@ class MYKMeans:
     def has_converged(self, old_centroids, centroids):
         if old_centroids is None:
             return False
-        return numpy.allclose(old_centroids, centroids, atol=self.tol)
+        return np.allclose(old_centroids, centroids, atol=self.tol)
 
     def should_stop(self, old_centroids, centroids, iteration):
         if iteration > self.max_iter:
